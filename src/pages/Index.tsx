@@ -94,7 +94,7 @@ const Index = () => {
         <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
           <PackageSearch className="h-12 w-12 mb-4" />
           <p>No items registered yet</p>
-          <p className="text-sm mt-2">Click the "Register New" button above to get started</p>
+          <p className="text-sm mt-2 text-center px-4">Click the "Register New" button above to get started</p>
         </div>
       );
     }
@@ -113,25 +113,25 @@ const Index = () => {
   };
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4 min-h-screen animate-fade-in overflow-x-hidden">
-      <div className="space-y-4 mb-8">
-        <h1 className="text-4xl font-bold tracking-tight">Registrant</h1>
-        <p className="text-muted-foreground">
+    <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-4 min-h-screen animate-fade-in overflow-x-hidden">
+      <div className="space-y-2 sm:space-y-4 mb-8">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Registrant</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Register and manage your entries for baskets, protocols, and certificate types.
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RegistryKind)}>
-        <div className="flex items-center justify-between mb-6">
-          <TabsList className="w-[400px]">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RegistryKind)} className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-0 sm:justify-between">
+          <TabsList className="w-full sm:w-[400px]">
             <TabsTrigger value="basket" className="flex-1">Baskets</TabsTrigger>
             <TabsTrigger value="proto" className="flex-1">Protocols</TabsTrigger>
-            <TabsTrigger value="cert" className="flex-1">Certificate Types</TabsTrigger>
+            <TabsTrigger value="cert" className="flex-1">Certificates</TabsTrigger>
           </TabsList>
           <Button
             onClick={() => setIsFormOpen(true)}
             size={items.length === 0 ? "lg" : "default"}
-            className={items.length === 0 ? "animate-pulse" : ""}
+            className={`w-full sm:w-auto ${items.length === 0 ? "animate-pulse" : ""}`}
           >
             <Plus className="mr-2 h-4 w-4" />
             Register New

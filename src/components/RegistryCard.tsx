@@ -56,7 +56,7 @@ export const RegistryCard = ({ item, onRevoke }: RegistryCardProps) => {
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
-
+      
       <div className="space-y-2">
         <p className="text-sm">
           <span className="font-medium">Name:</span> {item.name}
@@ -64,7 +64,7 @@ export const RegistryCard = ({ item, onRevoke }: RegistryCardProps) => {
         {item.documentationURL && (
           <p className="text-sm break-all">
             <span className="font-medium">Documentation:</span>{" "}
-            <a
+            <a 
               href={item.documentationURL}
               className="text-primary hover:underline"
               target="_blank"

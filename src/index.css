@@ -71,9 +71,11 @@
   * {
     @apply border-border;
   }
+  
   html {
     overflow-y: scroll;
   }
+  
   body {
     @apply bg-background text-foreground;
     background-image: radial-gradient(

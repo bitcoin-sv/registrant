@@ -3,17 +3,19 @@ import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, PackageSearch } from "lucide-react";
+import { Plus, PackageSearch, LogOut } from "lucide-react";
 import { RegistryCard } from "@/components/RegistryCard";
 import { RegistryForm } from "@/components/RegistryForm";
 import { MockRegistryClient } from "@/lib/mockRegistryClient";
 import { RegistryKind, RegistryRecord } from "@/types/registry";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock client instance
 const client = new MockRegistryClient();
 
 const Index = () => {
   const { toast } = useToast();
+  const { logout } = useAuth();
   const [activeTab, setActiveTab] = useState<RegistryKind>("basket");
   const [items, setItems] = useState<RegistryRecord[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -114,11 +116,17 @@ const Index = () => {
 
   return (
     <div className="container max-w-5xl mx-auto py-4 sm:py-8 px-4 min-h-screen animate-fade-in overflow-x-hidden">
-      <div className="space-y-2 sm:space-y-4 mb-8">
-        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Registrant</h1>
-        <p className="text-sm sm:text-base text-muted-foreground">
-          Register and manage your entries for baskets, protocols, and certificate types.
-        </p>
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
+        <div className="space-y-2 sm:space-y-4">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">Registrant</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Register and manage your entries for baskets, protocols, and certificate types.
+          </p>
+        </div>
+        <Button variant="ghost" onClick={logout} className="text-muted-foreground self-end sm:self-start">
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RegistryKind)} className="space-y-6">
@@ -128,7 +136,7 @@ const Index = () => {
             <TabsTrigger value="proto" className="flex-1">Protocols</TabsTrigger>
             <TabsTrigger value="cert" className="flex-1">Certificates</TabsTrigger>
           </TabsList>
-          <Button
+          <Button 
             onClick={() => setIsFormOpen(true)}
             size={items.length === 0 ? "lg" : "default"}
             className={`w-full sm:w-auto ${items.length === 0 ? "animate-pulse" : ""}`}

@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Plus, X } from "lucide-react";
 import { RegistryKind } from "@/types/registry";
 
 interface RegistryFormProps {
@@ -26,6 +27,11 @@ interface RegistryFormProps {
   open: boolean;
   onClose: () => void;
   onSubmit: (data: Record<string, string>) => void;
+}
+
+interface CertField {
+  key: string;
+  value: string;
 }
 
 export const RegistryForm = ({
@@ -36,11 +42,12 @@ export const RegistryForm = ({
 }: RegistryFormProps) => {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [certFields, setCertFields] = useState<CertField[]>([]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!open) return;
-      
+
       if (e.key === "Escape") {
         onClose();
       } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
@@ -56,7 +63,21 @@ export const RegistryForm = ({
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onSubmit(formData);
+      if (kind === "cert") {
+        const fieldsObj = certFields.reduce((acc, field) => {
+          if (field.key && field.value) {
+            acc[field.key] = field.value;
+          }
+          return acc;
+        }, {} as Record<string, string>);
+
+        await onSubmit({
+          ...formData,
+          fieldsJSON: JSON.stringify(fieldsObj),
+        });
+      } else {
+        await onSubmit(formData);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -66,9 +87,26 @@ export const RegistryForm = ({
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const addCertField = () => {
+    setCertFields(prev => [...prev, { key: "", value: "" }]);
+  };
+
+  const removeCertField = (index: number) => {
+    setCertFields(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateCertField = (index: number, key: string, value: string) => {
+    setCertFields(prev =>
+      prev.map((field, i) =>
+        i === index ? { ...field, [key]: value } : field
+      )
+    );
+  };
+
   useEffect(() => {
     if (open) {
       setFormData({});
+      setCertFields([]);
       setIsSubmitting(false);
     }
   }, [open]);
@@ -136,13 +174,50 @@ export const RegistryForm = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="fields">Fields (JSON)</Label>
-                <Textarea
-                  id="fields"
-                  placeholder="{}"
-                  className="font-mono"
-                  onChange={(e) => updateField("fieldsJSON", e.target.value)}
-                />
+                <div className="flex justify-between items-center mb-2">
+                  <Label>Certificate Fields</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addCertField}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Field
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {certFields.map((field, index) => (
+                    <div key={index} className="flex gap-2 items-start">
+                      <Input
+                        placeholder="Field name"
+                        value={field.key}
+                        onChange={(e) => updateCertField(index, "key", e.target.value)}
+                        className="flex-1"
+                      />
+                      <Input
+                        placeholder="Field value"
+                        value={field.value}
+                        onChange={(e) => updateCertField(index, "value", e.target.value)}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeCertField(index)}
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {certFields.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No fields added yet. Click "Add Field" to start adding certificate fields.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -183,16 +258,16 @@ export const RegistryForm = ({
           </div>
 
           <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
+            <Button
+              type="button"
+              variant="outline"
               onClick={onClose}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Registering..." : "Register"}

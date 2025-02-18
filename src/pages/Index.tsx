@@ -113,7 +113,7 @@ const Index = () => {
   };
 
   return (
-    <div className="container max-w-5xl mx-auto py-8 px-4 min-h-screen animate-fade-in">
+    <div className="container max-w-5xl mx-auto py-8 px-4 min-h-screen animate-fade-in overflow-x-hidden">
       <div className="space-y-4 mb-8">
         <h1 className="text-4xl font-bold tracking-tight">Registrant</h1>
         <p className="text-muted-foreground">
@@ -128,7 +128,7 @@ const Index = () => {
             <TabsTrigger value="proto" className="flex-1">Protocols</TabsTrigger>
             <TabsTrigger value="cert" className="flex-1">Certificate Types</TabsTrigger>
           </TabsList>
-          <Button 
+          <Button
             onClick={() => setIsFormOpen(true)}
             size={items.length === 0 ? "lg" : "default"}
             className={items.length === 0 ? "animate-pulse" : ""}

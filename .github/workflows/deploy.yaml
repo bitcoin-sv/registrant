@@ -3,13 +3,12 @@ on:
   push:
     branches:
       - master
-      - production
 
 env:
-  CURRENT_BRANCH: ${{ github.ref_name =='production' && 'production' || 'master' }}
   GCR_HOST: us.gcr.io
   GOOGLE_PROJECT_ID: babbage-private
   GCR_IMAGE_NAME: registrant
+  CURRENT_BRANCH: master
 
 jobs:
   build:
@@ -34,6 +33,7 @@ jobs:
           credentials_json: ${{ secrets.GCP_DEPLOY_CREDS }}
       - uses: google-github-actions/deploy-cloudrun@v2
         with:
-          service: ${{ env.GCR_IMAGE_NAME }}-${{ env.CURRENT_BRANCH }}
-          image: "${{ env.GCR_HOST }}/${{ env.GOOGLE_PROJECT_ID }}/${{ env.GCR_IMAGE_NAME }}:${{ env.CURRENT_BRANCH }}-${{ github.sha }}"
+          service: ${{ env.GCR_IMAGE_NAME }}
+          image: "${{ env.GCR_HOST }}/${{ env.GOOGLE_PROJECT_ID }}/${{ env.GCR_IMAGE_NAME }}:master-${{ github.sha }}"
           timeout: 3540
+          allow-unauthenticated: true

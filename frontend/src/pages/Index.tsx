@@ -1,29 +1,34 @@
 
-import { useEffect, useState } from "react";
+import { act, useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, PackageSearch, LogOut } from "lucide-react";
 import { RegistryCard } from "@/components/RegistryCard";
 import { RegistryForm } from "@/components/RegistryForm";
-import { MockRegistryClient } from "@/lib/mockRegistryClient";
-import { RegistryKind, RegistryRecord } from "@/types/registry";
+// import { MockRegistryClient } from "@/lib/mockRegistryClient";
+import { DefinitionData, DefinitionType, IdentityClient, RegistryClient, RegistryRecord, WalletClient } from '@bsv/sdk'
+// import { RegistryKind, RegistryRecord } from "@/types/registry";
 import { useAuth } from "@/contexts/AuthContext";
+// import { IdentityCard, IdentityProvider } from '@bsv/identity-react'
+import { IdentityCard } from 'metanet-identity-react'
 
-// Mock client instance
-const client = new MockRegistryClient();
+const client = new RegistryClient();
 
 const Index = () => {
   const { toast } = useToast();
   const { logout } = useAuth();
-  const [activeTab, setActiveTab] = useState<RegistryKind>("basket");
+  const [activeTab, setActiveTab] = useState<DefinitionType>("basket");
+  const [currentUser, setCurrentUser] = useState('unknown')
   const [items, setItems] = useState<RegistryRecord[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadItems = async () => {
     try {
+      console.log('active tab', activeTab)
       const records = await client.listOwnRegistryEntries(activeTab);
+      console.log('R', records)
       setItems(records);
     } catch (error) {
       toast({
@@ -37,17 +42,19 @@ const Index = () => {
   };
 
   useEffect(() => {
+    (async () => {
+      if (currentUser === 'unknown') {
+        setCurrentUser((await new WalletClient().getPublicKey({ identityKey: true })).publicKey)
+      }
+    })()
     setIsLoading(true);
     loadItems();
   }, [activeTab]);
 
-  const handleRegister = async (formData: Record<string, string>) => {
+  const handleRegister = async (formData: DefinitionData) => {
     try {
+      await client.registerDefinition(formData);
       setIsFormOpen(false);
-      await client.registerItem({
-        kind: activeTab,
-        ...formData,
-      });
       toast({
         title: "Success",
         description: "Item registered successfully",
@@ -64,7 +71,7 @@ const Index = () => {
 
   const handleRevoke = async (item: RegistryRecord) => {
     try {
-      await client.revokeOwnRegistryEntry(activeTab, item);
+      await client.revokeOwnRegistryEntry(item);
       toast({
         title: "Success",
         description: "Item revoked successfully",
@@ -127,16 +134,17 @@ const Index = () => {
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>
+        <IdentityCard identityKey={currentUser} />
       </div>
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as RegistryKind)} className="space-y-6">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as DefinitionType)} className="space-y-6">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-0 sm:justify-between">
           <TabsList className="w-full sm:w-[400px]">
             <TabsTrigger value="basket" className="flex-1">Baskets</TabsTrigger>
-            <TabsTrigger value="proto" className="flex-1">Protocols</TabsTrigger>
-            <TabsTrigger value="cert" className="flex-1">Certificates</TabsTrigger>
+            <TabsTrigger value="protocol" className="flex-1">Protocols</TabsTrigger>
+            <TabsTrigger value="certificate" className="flex-1">Certificates</TabsTrigger>
           </TabsList>
-          <Button 
+          <Button
             onClick={() => setIsFormOpen(true)}
             size={items.length === 0 ? "lg" : "default"}
             className={`w-full sm:w-auto ${items.length === 0 ? "animate-pulse" : ""}`}
@@ -150,17 +158,16 @@ const Index = () => {
           {renderContent()}
         </TabsContent>
 
-        <TabsContent value="proto" className="mt-6">
+        <TabsContent value="protocol" className="mt-6">
           {renderContent()}
         </TabsContent>
 
-        <TabsContent value="cert" className="mt-6">
+        <TabsContent value="certificate" className="mt-6">
           {renderContent()}
         </TabsContent>
       </Tabs>
-
       <RegistryForm
-        kind={activeTab}
+        type={activeTab}
         open={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onSubmit={handleRegister}

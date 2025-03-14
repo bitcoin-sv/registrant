@@ -81,17 +81,17 @@ const Start = () => {
         </div>
 
         <div className="grid gap-4">
-          <Button 
-            size="lg" 
-            className="w-full" 
+          <Button
+            size="lg"
+            className="w-full"
             onClick={handleWalletLogin}
           >
             <Wallet className="mr-2 h-4 w-4" />
             Use Local Wallet
           </Button>
-          <Button 
-            size="lg" 
-            variant="outline" 
+          <Button
+            size="lg"
+            variant="outline"
             className="w-full"
             onClick={() => setShowPrivateKeyInput(true)}
           >

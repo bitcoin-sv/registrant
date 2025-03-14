@@ -22,7 +22,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => {
   const { auth } = useAuth();
-  
+
   return (
     <Routes>
       <Route path="/" element={auth.isAuthenticated ? <Navigate to="/registry" /> : <Start />} />

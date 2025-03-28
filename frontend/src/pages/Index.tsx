@@ -6,14 +6,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Plus, PackageSearch, LogOut } from "lucide-react";
 import { RegistryCard } from "@/components/RegistryCard";
 import { RegistryForm } from "@/components/RegistryForm";
-// import { MockRegistryClient } from "@/lib/mockRegistryClient";
 import { DefinitionData, DefinitionType, IdentityClient, RegistryClient, RegistryRecord, WalletClient } from '@bsv/sdk'
-// import { RegistryKind, RegistryRecord } from "@/types/registry";
 import { useAuth } from "@/contexts/AuthContext";
-// import { IdentityCard, IdentityProvider } from '@bsv/identity-react'
 import { IdentityCard } from 'metanet-identity-react'
-
-const client = new RegistryClient();
 
 const Index = () => {
   const { toast } = useToast();
@@ -23,6 +18,8 @@ const Index = () => {
   const [items, setItems] = useState<RegistryRecord[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const wallet = useAuth().auth.wallet
+  const client = new RegistryClient(wallet)
 
   const loadItems = async () => {
     try {
@@ -44,7 +41,7 @@ const Index = () => {
   useEffect(() => {
     (async () => {
       if (currentUser === 'unknown') {
-        setCurrentUser((await new WalletClient().getPublicKey({ identityKey: true })).publicKey)
+        setCurrentUser((await wallet.getPublicKey({ identityKey: true })).publicKey)
       }
     })()
     setIsLoading(true);
@@ -63,7 +60,7 @@ const Index = () => {
     } catch (error) {
       toast({
         title: "Registration failed",
-        description: "Failed to register item. Please try again.",
+        description: error.message,
         variant: "destructive",
       });
     }
@@ -134,7 +131,7 @@ const Index = () => {
           <LogOut className="mr-2 h-4 w-4" />
           Logout
         </Button>
-        <IdentityCard identityKey={currentUser} />
+        {/* <IdentityCard identityKey={currentUser} /> */}
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as DefinitionType)} className="space-y-6">

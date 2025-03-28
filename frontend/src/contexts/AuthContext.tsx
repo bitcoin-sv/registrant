@@ -1,10 +1,11 @@
 
 import { createContext, useContext, ReactNode, useState, useEffect } from "react";
 import { AuthState, AuthMethod } from "@/types/auth";
+import { WalletInterface } from "@bsv/sdk";
 
 interface AuthContextType {
   auth: AuthState;
-  login: (method: AuthMethod, privateKey?: string) => void;
+  login: (method: AuthMethod, wallet?: WalletInterface) => void;
   logout: () => void;
 }
 
@@ -12,19 +13,14 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<AuthState>(() => {
-    const saved = localStorage.getItem('auth');
-    return saved ? JSON.parse(saved) : { isAuthenticated: false };
+    return { isAuthenticated: false }
   });
 
-  useEffect(() => {
-    localStorage.setItem('auth', JSON.stringify(auth));
-  }, [auth]);
-
-  const login = (method: AuthMethod, privateKey?: string) => {
+  const login = (method: AuthMethod, wallet?: WalletInterface) => {
     setAuth({
       isAuthenticated: true,
       method,
-      privateKey,
+      wallet
     });
   };
 

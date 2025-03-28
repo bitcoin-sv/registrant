@@ -382,7 +382,6 @@ export const RegistryForm = ({
               <Label htmlFor="iconURL">Icon URL</Label>
               <Input
                 id="iconURL"
-                type="url"
                 onChange={(e) => updateField("iconURL", e.target.value)}
               />
             </div>

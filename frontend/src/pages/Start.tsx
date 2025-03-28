@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Wallet, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { WalletClient } from "@bsv/sdk";
+import makeWallet from "@/lib/makeWallet";
 
 const Start = () => {
   const [privateKey, setPrivateKey] = useState("");
@@ -14,14 +16,14 @@ const Start = () => {
 
   const handleWalletLogin = () => {
     // In a real implementation, this would connect to the user's wallet
-    login('wallet');
+    login('wallet', new WalletClient());
     toast({
       title: "Connected to wallet",
       description: "Successfully connected to your local wallet",
     });
   };
 
-  const handlePrivateKeyLogin = (e: React.FormEvent) => {
+  const handlePrivateKeyLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!privateKey.match(/^[0-9a-fA-F]{64}$/)) {
       toast({
@@ -31,7 +33,9 @@ const Start = () => {
       });
       return;
     }
-    login('privateKey', privateKey);
+
+    const wallet = await makeWallet('main', privateKey, 'https://storage.babbage.systems')
+    login('privateKey', wallet)
   };
 
   if (showPrivateKeyInput) {
@@ -51,7 +55,7 @@ const Start = () => {
                 type="password"
                 placeholder="Enter private key"
                 value={privateKey}
-                onChange={(e) => setPrivateKey(e.target.value)}
+                onChange={(e: { target: { value: any; }; }) => setPrivateKey(e.target.value)}
                 className="font-mono text-sm"
               />
               <p className="text-xs sm:text-sm text-muted-foreground">

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -7,36 +7,44 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, ChevronDown } from "lucide-react";
-import { CertificateDefinitionData, CertificateFieldDescriptor, DefinitionData, DefinitionType } from "@bsv/sdk";
+} from "@/components/ui/collapsible"
+import { Textarea } from "@/components/ui/textarea"
+import { Plus, X, ChevronDown } from "lucide-react"
+import {
+  CertificateDefinitionData,
+  CertificateFieldDescriptor,
+  DefinitionData,
+  DefinitionType,
+  ProtocolDefinitionData,
+  SecurityLevel,
+  WalletProtocol,
+} from "@bsv/sdk"
 
 interface RegistryFormProps {
-  type: DefinitionType;
-  open: boolean;
-  onClose: () => void;
-  onSubmit: (data: DefinitionData) => void;
+  type: DefinitionType
+  open: boolean
+  onClose: () => void
+  onSubmit: (data: DefinitionData) => void
 }
 
 interface CertField {
-  key: string;
-  value: CertificateFieldDescriptor;
-  isExpanded?: boolean;
+  key: string
+  value: CertificateFieldDescriptor
+  isExpanded?: boolean
 }
 
 export const RegistryForm = ({
@@ -51,153 +59,176 @@ export const RegistryForm = ({
       description: "",
       iconURL: "",
       documentationURL: "",
-    };
+    }
 
     switch (type) {
-      case 'basket':
+      case "basket":
         return {
           ...baseData,
-          definitionType: 'basket',
+          definitionType: "basket",
           basketID: "",
-        };
-      case 'protocol':
+        }
+      case "protocol":
         return {
           ...baseData,
-          definitionType: 'protocol',
-          protocolID: [0, 'unknown']
-        };
-      case 'certificate':
+          definitionType: "protocol",
+          // protocolID must be [securityLevel, protocolIDString]
+          protocolID: [0, "unknown"],
+        }
+      case "certificate":
         return {
           ...baseData,
-          definitionType: 'certificate',
+          definitionType: "certificate",
           type: "",
           fields: {},
-        };
+        }
     }
-  };
+  }
 
-  const [formData, setFormData] = useState<DefinitionData>(getInitialFormData());
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [certFields, setCertFields] = useState<CertField[]>([]);
+  const [formData, setFormData] = useState<DefinitionData>(getInitialFormData())
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [certFields, setCertFields] = useState<CertField[]>([])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!open) return;
+      if (!open) return
 
       if (e.key === "Escape") {
-        onClose();
+        onClose()
       } else if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        const form = document.querySelector('form');
+        const form = document.querySelector("form")
         if (form) {
-          form.dispatchEvent(new Event('submit', { cancelable: true }));
+          form.dispatchEvent(new Event("submit", { cancelable: true }))
         }
       }
-    };
+    }
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, onClose]);
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [open, onClose])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault()
+    setIsSubmitting(true)
     try {
       switch (type) {
-        case 'basket':
-          formData.definitionType = 'basket';
-          break;
-        case 'protocol':
-          formData.definitionType = 'protocol';
-          break;
-        case 'certificate': {
+        case "basket":
+          formData.definitionType = "basket"
+          break
+        case "protocol":
+          formData.definitionType = "protocol"
+          break
+        case "certificate": {
           const fieldsObj = certFields.reduce((acc, field) => {
             if (field.key && field.value) {
-              acc[field.key] = field.value;
+              acc[field.key] = field.value
             }
-            return acc;
-          }, {} as Record<string, CertificateFieldDescriptor>);
-          formData.definitionType = 'certificate';
-          (formData as CertificateDefinitionData).fields = fieldsObj;
-          break;
+            return acc
+          }, {} as Record<string, CertificateFieldDescriptor>)
+          formData.definitionType = "certificate";
+          (formData as CertificateDefinitionData).fields = fieldsObj
+          break
         }
       }
-      await onSubmit(formData);
+      await onSubmit(formData)
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
+  }
 
   const updateField = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+    setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const updateProtocolField = (target: "level" | "id", value: string) => {
+    setFormData((prev: ProtocolDefinitionData) => {
+      const [level, protocolIdString] = prev.protocolID as WalletProtocol
+      return {
+        ...prev,
+        protocolID:
+          target === "level"
+            ? [Number(value) as SecurityLevel, protocolIdString]
+            : [level, value]
+      }
+    })
+  }
 
   const addCertField = () => {
-    setCertFields(prev => [...prev, {
-      key: "",
-      value: {
-        friendlyName: "",
-        description: "",
-        type: "text",
-        fieldIcon: ""
+    setCertFields((prev) => [
+      ...prev,
+      {
+        key: "",
+        value: {
+          friendlyName: "",
+          description: "",
+          type: "text",
+          fieldIcon: "",
+        },
+        isExpanded: true,
       },
-      isExpanded: true
-    }]);
-  };
+    ])
+  }
 
   const removeCertField = (index: number) => {
-    setCertFields(prev => prev.filter((_, i) => i !== index));
-  };
+    setCertFields((prev) => prev.filter((_, i) => i !== index))
+  }
 
   const updateCertField = (
     index: number,
     key: "key" | keyof CertificateFieldDescriptor,
     value: string
   ) => {
-    setCertFields(prev =>
+    setCertFields((prev) =>
       prev.map((field, i) => {
         if (i === index) {
           if (key === "key") {
-            return { ...field, key: value };
+            return { ...field, key: value }
           } else {
             return {
               ...field,
-              value: { ...field.value, [key]: value }
-            };
+              value: { ...field.value, [key]: value },
+            }
           }
         }
-        return field;
+        return field
       })
-    );
-  };
+    )
+  }
 
   const toggleFieldExpanded = (index: number, isExpanded: boolean) => {
-    setCertFields(prev =>
-      prev.map((field, i) =>
-        i === index ? { ...field, isExpanded } : field
-      )
-    );
-  };
+    setCertFields((prev) =>
+      prev.map((field, i) => (i === index ? { ...field, isExpanded } : field))
+    )
+  }
 
   useEffect(() => {
     if (open) {
-      setFormData(getInitialFormData());
-      setCertFields([]);
-      setIsSubmitting(false);
+      setFormData(getInitialFormData())
+      setCertFields([])
+      setIsSubmitting(false)
     }
-  }, [open]);
+  }, [open])
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[525px] max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Register New {type.charAt(0).toUpperCase() + type.slice(1)}</DialogTitle>
+          <DialogTitle>
+            Register New {type.charAt(0).toUpperCase() + type.slice(1)}
+          </DialogTitle>
           <DialogDescription>
             Fill in the details below to register a new {type} in the registry.
-            Press <kbd className="px-2 py-1 text-xs rounded bg-muted">⌘ + Enter</kbd> to submit.
+            Press{" "}
+            <kbd className="px-2 py-1 text-xs rounded bg-muted">⌘ + Enter</kbd>{" "}
+            to submit.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto pr-6 -mr-6">
-          <form id="registryForm" onSubmit={handleSubmit} className="space-y-4 pr-0">
+          <form
+            id="registryForm"
+            onSubmit={handleSubmit}
+            className="space-y-4 pr-0"
+          >
             {type === "basket" && (
               <div className="space-y-4">
                 <div className="space-y-2">
@@ -214,25 +245,27 @@ export const RegistryForm = ({
             {type === "protocol" && (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="protocolID">Protocol ID</Label>
+                  <Label htmlFor="protocolID">Protocol ID String</Label>
                   <Input
                     id="protocolID"
                     required
-                    onChange={(e) => updateField("protocolID", e.target.value)}
+                    onChange={(e) => updateProtocolField("id", e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="securityLevel">Security Level</Label>
+                  <Label htmlFor="protocolLevel">Security Level</Label>
                   <Select
-                    onValueChange={(value) => updateField("securityLevel", value)}
+                    onValueChange={(value) => updateProtocolField("level", value)}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select security level" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="0">Level 0 (Basic)</SelectItem>
-                      <SelectItem value="1">Level 1 (Enhanced)</SelectItem>
-                      <SelectItem value="2">Level 2 (Maximum)</SelectItem>
+                      <SelectItem value="0">Level 0 (Silent)</SelectItem>
+                      <SelectItem value="1">Level 1 (App)</SelectItem>
+                      <SelectItem value="2">
+                        Level 2 (Counterparty)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -268,7 +301,9 @@ export const RegistryForm = ({
                         key={index}
                         className="border rounded-lg group"
                         open={field.isExpanded}
-                        onOpenChange={(isOpen) => toggleFieldExpanded(index, isOpen)}
+                        onOpenChange={(isOpen) =>
+                          toggleFieldExpanded(index, isOpen)
+                        }
                       >
                         <CollapsibleTrigger className="w-full">
                           <div className="p-4 flex items-center justify-between group-hover:bg-muted/50 rounded-t-lg transition-colors">
@@ -276,7 +311,7 @@ export const RegistryForm = ({
                               <div className="flex items-center gap-2">
                                 <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
                                 <span className="font-medium">
-                                  {field.key || 'New Field'}
+                                  {field.key || "New Field"}
                                 </span>
                                 <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded-full">
                                   {field.value.type}
@@ -288,8 +323,8 @@ export const RegistryForm = ({
                               variant="ghost"
                               size="icon"
                               onClick={(e) => {
-                                e.stopPropagation();
-                                removeCertField(index);
+                                e.stopPropagation()
+                                removeCertField(index)
                               }}
                               className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             >
@@ -300,51 +335,99 @@ export const RegistryForm = ({
                         <CollapsibleContent>
                           <div className="space-y-3 px-4 pb-4 border-t">
                             <div className="space-y-2 pt-4">
-                              <Label>Field Name <span className="text-xs text-muted-foreground">(required)</span></Label>
+                              <Label>
+                                Field Name{" "}
+                                <span className="text-xs text-muted-foreground">
+                                  (required)
+                                </span>
+                              </Label>
                               <Input
                                 placeholder="e.g., certificateNumber, issueDate"
                                 value={field.key}
-                                onChange={(e) => updateCertField(index, "key", e.target.value)}
+                                onChange={(e) =>
+                                  updateCertField(
+                                    index,
+                                    "key",
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>Friendly Name <span className="text-xs text-muted-foreground">(how it appears in the UI)</span></Label>
+                              <Label>
+                                Friendly Name{" "}
+                                <span className="text-xs text-muted-foreground">
+                                  (how it appears in the UI)
+                                </span>
+                              </Label>
                               <Input
                                 placeholder="e.g., Certificate Number, Issue Date"
                                 value={field.value.friendlyName}
-                                onChange={(e) => updateCertField(index, "friendlyName", e.target.value)}
+                                onChange={(e) =>
+                                  updateCertField(
+                                    index,
+                                    "friendlyName",
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                             <div className="space-y-2">
-                              <Label>Description <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                              <Label>
+                                Description{" "}
+                                <span className="text-xs text-muted-foreground">
+                                  (optional)
+                                </span>
+                              </Label>
                               <Textarea
                                 placeholder="Describe what this field is used for"
                                 value={field.value.description}
-                                onChange={(e) => updateCertField(index, "description", e.target.value)}
+                                onChange={(e) =>
+                                  updateCertField(
+                                    index,
+                                    "description",
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                             <div className="space-y-2">
                               <Label>Type</Label>
                               <Select
                                 value={field.value.type}
-                                onValueChange={(value) => updateCertField(index, "type", value)}
+                                onValueChange={(value) =>
+                                  updateCertField(index, "type", value)
+                                }
                               >
                                 <SelectTrigger>
                                   <SelectValue placeholder="Select field type" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="text">Text</SelectItem>
-                                  <SelectItem value="imageURL">Image URL</SelectItem>
+                                  <SelectItem value="imageURL">
+                                    Image URL
+                                  </SelectItem>
                                   <SelectItem value="other">Other</SelectItem>
                                 </SelectContent>
                               </Select>
                             </div>
                             <div className="space-y-2">
-                              <Label>Field Icon <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                              <Label>
+                                Field Icon{" "}
+                                <span className="text-xs text-muted-foreground">
+                                  (optional)
+                                </span>
+                              </Label>
                               <Input
                                 placeholder="Icon name or URL"
                                 value={field.value.fieldIcon}
-                                onChange={(e) => updateCertField(index, "fieldIcon", e.target.value)}
+                                onChange={(e) =>
+                                  updateCertField(
+                                    index,
+                                    "fieldIcon",
+                                    e.target.value
+                                  )
+                                }
                               />
                             </div>
                           </div>
@@ -405,15 +488,11 @@ export const RegistryForm = ({
           >
             Cancel
           </Button>
-          <Button
-            type="submit"
-            form="registryForm"
-            disabled={isSubmitting}
-          >
+          <Button type="submit" form="registryForm" disabled={isSubmitting}>
             {isSubmitting ? "Registering..." : "Register"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
